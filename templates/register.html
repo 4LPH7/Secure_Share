@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}SecureShare - Register{% endblock %}
+
+{% block styles %}
+<style>
+    .auth-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    .auth-card {
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        overflow: hidden;
+    }
+    .password-strength {
+        height: 4px;
+        background: #e9ecef;
+        margin-top: 0.5rem;
+        border-radius: 2px;
+    }
+    .password-strength-bar {
+        height: 100%;
+        width: 0;
+        background: #dc3545;
+        border-radius: 2px;
+        transition: width 0.3s ease, background 0.3s ease;
+    }
+    .progress-bar-weak { background: #dc3545; }
+    .progress-bar-medium { background: #ffc107; }
+    .progress-bar-strong { background: #28a745; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="auth-card bg-white p-4 p-md-5">
+                    <div class="text-center mb-5">
+                        <h2 class="mb-3">
+                            <i class="bi bi-shield-lock text-primary"></i> SecureShare
+                        </h2>
+                        <p class="text-muted">Create your secure account</p>
+                    </div>
+
+                    <form method="POST" class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-4">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" name="username" id="username"
+                                   class="form-control form-control-lg"
+                                   placeholder="Enter username" required
+                                   minlength="4" maxlength="25">
+                            <div class="invalid-feedback">
+                                Please choose a username (4-25 characters)
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" name="email" id="email"
+                                   class="form-control form-control-lg"
+                                   placeholder="name@example.com" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid email address
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="password"
+                                       class="form-control form-control-lg"
+                                       placeholder="Create password" required
+                                       pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}">
+                                <button class="btn btn-outline-secondary toggle-password"
+                                        type="button">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="password-strength-bar"></div>
+                            </div>
+                            <div class="form-text">
+                                Must contain at least 8 characters, 1 uppercase, 1 lowercase, and 1 number
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirm" class="form-label">Confirm Password</label>
+                            <input type="password" name="confirm" id="confirm"
+                                   class="form-control form-control-lg"
+                                   placeholder="Confirm password" required>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Create Account
+                            </button>
+                        </div>
+
+                        <div class="text-center text-muted">
+                            Already have an account?
+                            <a href="{{ url_for('login') }}" class="text-decoration-none">
+                                Login here
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Password toggle
+    document.querySelector('.toggle-password').addEventListener('click', function(e) {
+        const password = document.getElementById('password');
+        const icon = this.querySelector('i');
+        if (password.type === 'password') {
+            password.type = 'text';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            password.type = 'password';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    });
+
+    // Password strength indicator
+    const passwordInput = document.getElementById('password');
+    const strengthBar = document.getElementById('password-strength-bar');
+
+    passwordInput.addEventListener('input', function() {
+        const strength = checkPasswordStrength(this.value);
+        strengthBar.style.width = strength.percentage + '%';
+        strengthBar.className = 'password-strength-bar ' + strength.class;
+    });
+
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        if (password.match(/[a-z]+/)) strength++;
+        if (password.match(/[A-Z]+/)) strength++;
+        if (password.match(/[0-9]+/)) strength++;
+        if (password.match(/[$@#&!]+/)) strength++;
+        if (password.length >= 8) strength++;
+
+        const percentage = (strength / 5) * 100;
+        let className = 'progress-bar-weak';
+        if (percentage >= 60) className = 'progress-bar-medium';
+        if (percentage >= 80) className = 'progress-bar-strong';
+
+        return { percentage, class: className };
+    }
+
+    // Form validation
+    (() => {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
+{% endblock %}
+{% endblock %}
